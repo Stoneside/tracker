@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Attendance Tracker</title>
+        <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
+        <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+    </head> 
+    <style>
+        #playerBox, #addPenaltyBox, #reducePenaltyBox {
+            font-family: "Droid Serif"; 
+            display: none;
+            background-color: #E8E8E8;
+            padding: 10px;
+            box-shadow: 10px 10px 10px grey;            
+            border-style: ridge;
+            min-width: 330px;
+        }      
+
+        .title { 
+            font-size: 24px;
+            font-family: "Droid Serif";
+            font-weight: bolder;
+            margin: 0 0 10px 0;
+            padding-top: 0;
+        }
+
+        #playerInfo {
+            margin: 5px;
+            padding: 5px;
+            max-width: 90%;
+        }
+
+
+        #penalties {
+     /*       margin: 5px;
+            padding: 5px;*/
+        }
+        
+        .penaltyBox {
+            box-shadow: -5px -5px 5px grey;        
+            border-style: ridge;
+            margin: 10px 5px;
+            padding: 5px;
+        }
+
+        .close {
+            margin-left: 90%;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 24px;
+        }
+
+        .label {
+            display: inline-block; 
+            width: 120px;
+            text-align: right;       
+        }
+
+        .value {      
+            display: inline-block;
+            padding-left: 5px;
+            margin-bottom: 5px;
+        }
+
+        .button {
+            float: right;
+            margin-top: 10px;
+            margin-left: 10px;
+        }
+</style>
+    <body>
+        <div class="header" >
+            <H1>Attendance Tracker</H1>
+        </div>  
+        <div class="content" >
+            <table id="example" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>First</th>
+                        <th>Last</th>                        
+                        <th>PD Used</th>  
+                        <th>Penalty</th>  
+                        <th>Served</th> 
+                        <th>Final</th>          
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <th>First</th>
+                        <th>Last</th>                        
+                        <th>PD Used</th>  
+                        <th>Penalty</th>  
+                        <th>Served</th> 
+                        <th>Final</th>               
+                    </tr>
+            </tfoot>
+            </table>
+        </div>   
+        <div id="playerBox"> 
+            <div class="close">X</div>
+            <div class="title" id="name">Full Name</div>       
+            <div id="playerInfo">                                
+                <div>
+                    <div class="label">PD Used:</div> <div class="value" id="pd"></div>
+                </div>
+                <div>
+                    <div class="label">Penalty Time:</div> <div class="value" id="penalty"></div>
+                </div>
+                <div>
+                    <div class="label">Time Served:</div> <div class="value" id="served"></div>
+                </div>
+                <div>
+                    <div class="label">Remaining Time:</div> <div class="value" id="final">                       
+                </div>
+            </div>
+            </div>
+            <h3>Penalties</h3>
+            <div id="penalties"></div>
+            <div class="buttonBox">
+                <button class="button" id="addPenalty">Add Penalty</button>
+                <button class="button" id="reducePenalty">Reduce Penalty</button>         
+            </div>
+        </div>
+        <div id="addPenaltyBox">
+            <div class="close">X</div>
+            <div class="title">Add Penalty</div>
+            <div class="inputs">         
+                <div class="label">Date:</div>     
+                <input type="text" id="dateInput" class="value" />           
+            </div>
+            <div class="inputs">
+                <div class="label">Time:</div>
+                <input type="text" id="timeInput" class="value" />
+            </div>
+            <div class="inputs">
+                <div class="label">Reason:</div>  
+                <input type="text" id="reasonInput" class="value" />                
+            </div>
+             
+            <button class="button" id="saveAddPenalty">Save</button> 
+        </div> 
+        <div id="reducePenaltyBox">
+            <div class="close">X</div>
+            <div class="title">Reduce Penalty</div>            
+            <div class="inputs">
+                <div class="label">Reduce By: </div>
+                <input type="text" id="reduceInput" class="value" />                
+            </div>
+
+            <button class="button" id="savePenaltyReduced">Save</button>
+        </div> 
+        
+        <script type="module">
+            import { initializeApp } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-app.js";
+            import { getFirestore, collection, doc, getDocs, setDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-firestore.js";
+            import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.14.0/firebase-analytics.js";
+
+            const firebaseConfig = {
+                apiKey: "AIzaSyArebHHMPIy-vFQH9mhwZMpfDuwNa2eJ0E",
+                authDomain: "attendance-tracker-370623.firebaseapp.com",
+                projectId: "attendance-tracker-370623",
+                storageBucket: "attendance-tracker-370623.appspot.com",
+                messagingSenderId: "823650812101",
+                appId: "1:823650812101:web:b142ae77c51071571df0ac",
+                measurementId: "G-GS4G6EES6R"
+            };
+
+            // Initialize Firebase
+            const app = initializeApp(firebaseConfig);
+            const analytics = getAnalytics(app);
+            const db = getFirestore(app);
+
+            async function getPlayers(db) {
+                const playersColl = collection(db, "player");              
+                const snapshot = await getDocs(playersColl);
+                const list = snapshot.docs.map(doc => doc.data());
+
+                list.forEach((player) => {
+                    let reducedTime = player.penaltyReduced;
+                    let penaltyTime = player.penalties.reduce((a,o) => {
+                        return a + o.time;
+                    },0);
+                    
+                    let penaltyFinal = penaltyTime - reducedTime;
+                    penaltyFinal = penaltyFinal > 0 ? penaltyFinal : 0;
+
+                    player.penaltyFinal = penaltyFinal;
+                    player.penaltyTime = penaltyTime;
+                });
+                
+                return list;     
+            }       
+
+
+            async function saveAddPenalty(playerId, penalties, db) {
+                const player = doc(db, 'player', playerId);
+                updateDoc(player, { penalties: arrayUnion(penalties) });
+
+                return player;     
+            }  
+
+            async function savePenaltyReduced(playerId, time, db) {
+                const player = doc(db, 'player', playerId);
+                setDoc(player, { penaltyReduced: time }, { merge: true });
+        
+                return player;     
+            }      
+
+            $(document).ready(async function() {
+                var beast =   $('#example').DataTable({
+                    "data": await getPlayers(db),
+                    // "scrollY": 400,
+                    "paging": false,
+                    "order": [[ 5, "asc" ]],
+                    columnDefs: [
+                       { type: 'natural', targets: 2 }
+                     ],
+                     orderCellsTop: true,
+                     fixedHeader: true,
+                    "columns": [
+                        { "data": "firstName"},  
+                        { "data": "lastName"},    
+                        { "data": "personalDay" }, 
+                        { "data": "penaltyTime" },           
+                        { "data": "penaltyReduced" },  
+                        { "data": "penaltyFinal" },              
+                                           
+                    ],
+                    initComplete: function(settings, json){
+                        $('#example tbody tr').on('click', function(){
+                            let data = beast.row(this).data();
+                            $('#name').html(data.firstName + " " + data.lastName);
+                            $('#pd').html(data.personalDay);
+                            $('#penalty').html(data.penaltyTime);
+                            $('#served').html(data.penaltyReduced);
+                            $('#final').html(data.penaltyFinal);
+                            buildPenaltyBoxHTML(data.penalties);
+
+                            var w = $(window).width();
+                            var h = $(window).height();
+                            var d = $('#playerBox');
+                            var divW = $(d).width();
+                            var divH = $(d).height();
+
+
+                            $('#playerBox').css({
+                                'position' : 'absolute',
+                                'left' : (w/2)-(divW/2)+"px",
+                                'top' : (h/2)-(divH/2)+"px",
+                                // 'margin-left' : -$('#playerBox').outerWidth()/2,
+                            });
+
+                            localStorage.setItem('selectedPlayer', JSON.stringify(data));
+                            $('#playerBox').show();
+                        });
+                    }
+                });
+
+                $('.close').on('click', function(){ 
+                    $(this).parent().hide();
+                });
+
+                $('#addPenalty').on('click', function(){ 
+
+                            var w = $(window).width();
+                            var h = $(window).height();
+                            var d = $('#addPenaltyBox');
+                            var divW = $(d).width();
+                            var divH = $(d).height();                   
+                    $('#addPenaltyBox').css({
+                                'position' : 'absolute',
+                                'left' : (w/2)-(divW/2)+"px",
+                                'top' : (h/2)-(divH/2)+"px",
+                                // 'margin-left' : -$('#playerBox').outerWidth()/2,
+                            });
+                    $('#addPenaltyBox').show();
+                });
+
+                $('#reducePenalty').on('click', function(){                    
+                    $('#reducePenaltyBox').css({
+                        'position' : 'absolute',
+                        'left' : '50%',
+                        'top' : '5%',
+                        'margin-left' : -$('#reducePenaltyBox').outerWidth()/2,
+                    });
+                    $('#reducePenaltyBox').show();
+                });
+
+                $('#saveAddPenalty').on('click', function(){ 
+                    const player = JSON.parse(localStorage.getItem('selectedPlayer'));
+
+                    let penalty = {};
+                    penalty.date = $('#dateInput').val();
+                    penalty.time = parseInt($('#timeInput').val());
+                    penalty.reason = $('#reasonInput').val();
+
+                    if ( penalty.time > 0 && penalty.date != null && penalty.reason != "") {
+                        saveAddPenalty(player.id, penalty, db);
+                    } else  {
+                        alert("Please fill out all fields.")
+                    };
+
+                    $('#addPenaltyBox').hide();
+                    $('#playerBox').hide();         
+                });
+
+                $('#savePenaltyReduced').on('click', function(){ 
+                    const player = JSON.parse(localStorage.getItem('selectedPlayer'));
+
+                    const reduceTime = parseInt($('#reduceInput').val());
+                    if ( reduceTime > 0) {
+                        const time = player.penaltyReduced + reduceTime;
+                        savePenaltyReduced(player.id, time, db);
+                    }
+
+                    $('#reducePenaltyBox').hide(); 
+                    $('#playerBox').hide();           
+                });
+            } );
+
+            function buildPenaltyBoxHTML(penalties) {
+                $('#penalties').empty();
+
+                penalties.forEach((penalty) => {
+                    let template = [
+                    '<div class="penaltyBox">',
+                        '<div>',
+                            '<div class="label">Date:</div>',
+                            '<div class="value">' + penalty.date || 'NA' + '</div>',
+                        '</div>',
+                        '<div>',
+                            '<div class="label">Reason:</div>',
+                            '<div class="value">' + penalty.reason || 'NA' + '</div>',
+                        '</div>',
+                        '<div>',
+                            '<div class="label">Time:</div>',
+                            '<div class="value">' + penalty.time || 'NA' + '</div>',
+                        '</div>',
+                    '</div>'
+                    ];    
+                     
+                    $('#penalties').append($(template.join('')));                     
+                });
+            }
+        </script>     
+    </body>
+</html>
