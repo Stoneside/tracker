@@ -31,15 +31,9 @@
             padding: 5px;
             max-width: 90%;
         }
-
-
-        #penalties {
-     /*       margin: 5px;
-            padding: 5px;*/
-        }
         
         .penaltyBox {
-            box-shadow: -5px -5px 5px grey;        
+            box-shadow: 5px 5px 5px grey;        
             border-style: ridge;
             margin: 10px 5px;
             padding: 5px;
@@ -178,7 +172,7 @@
                 const playersColl = collection(db, "player");              
                 const snapshot = await getDocs(playersColl);
                 const list = snapshot.docs.map(doc => doc.data());
-
+                      ;
                 list.forEach((player) => {
                     let reducedTime = player.penaltyReduced;
                     let penaltyTime = player.penalties.reduce((a,o) => {
@@ -195,7 +189,6 @@
                 return list;     
             }       
 
-
             async function saveAddPenalty(playerId, penalties, db) {
                 const player = doc(db, 'player', playerId);
                 updateDoc(player, { penalties: arrayUnion(penalties) });
@@ -205,53 +198,13 @@
 
             async function savePenaltyReduced(playerId, time, db) {
                 const player = doc(db, 'player', playerId);
-                setDoc(player, { penaltyReduced: time }, { merge: true });
+                updateDoc(player, { penaltyReduced: time });
         
                 return player;     
             }      
 
             $(document).ready(async function() {
-                var beast =   $('#example').DataTable({
-                    "data": await getPlayers(db),
-                    // "scrollY": 400,
-                    "paging": false,
-                    "order": [[ 2, "desc" ]],
-                    columnDefs: [
-                       { type: 'natural', targets: 2 }
-                     ],
-                     orderCellsTop: true,
-                     fixedHeader: true,
-                     responsive: true,
-                    "columns": [
-                        { "data": "firstName"},  
-                        { "data": "lastName"}, 
-                        { "data": "penaltyFinal" },   
-                        // { "data": "personalDay" }, 
-                        // { "data": "penaltyTime" },           
-                        // { "data": "penaltyReduced" },
-                    ],
-                    initComplete: function(settings, json){
-                        $('#example tbody tr').on('click', function(){
-                            let data = beast.row(this).data();
-                            $('#name').html(data.firstName + " " + data.lastName);
-                            $('#pd').html(data.personalDay);
-                            $('#penalty').html(data.penaltyTime);
-                            $('#served').html(data.penaltyReduced);
-                            $('#final').html(data.penaltyFinal);
-                            buildPenaltyBoxHTML(data.penalties);
-
-                            $('#playerBox').css({
-                                'position' : 'absolute',
-                                'left' : '50%',
-                                'top' : '5%',
-                                'margin-left' : -$('#playerBox').outerWidth()/2,
-                            });
-
-                            localStorage.setItem('selectedPlayer', JSON.stringify(data));
-                            $('#playerBox').show();
-                        });
-                    }
-                });
+                createtable();
 
                 $('.close').on('click', function(){ 
                     $(this).parent().hide();
@@ -287,6 +240,10 @@
 
                     if ( penalty.time > 0 && penalty.date != null && penalty.reason != "") {
                         saveAddPenalty(player.id, penalty, db);
+                        $('#dateInput').val("");
+                        $('#timeInput').val("");
+                        $('#reasonInput').val("");
+                        refresh();
                     } else  {
                         alert("Please fill out all fields.")
                     };
@@ -302,12 +259,19 @@
                     if ( reduceTime > 0) {
                         const time = player.penaltyReduced + reduceTime;
                         savePenaltyReduced(player.id, time, db);
-                    }
-
+                        refresh();
+                        $('#reduceInput').val("");
+                    };
+                    
                     $('#reducePenaltyBox').hide(); 
                     $('#playerBox').hide();           
                 });
             } );
+
+            async function refresh() {
+                $('#example').DataTable().destroy();
+                createtable();
+            }
 
             function buildPenaltyBoxHTML(penalties) {
                 $('#penalties').empty();
@@ -331,6 +295,49 @@
                     ];    
                      
                     $('#penalties').append($(template.join('')));                     
+                });
+            }
+
+            async function createtable() {
+                $('#example').DataTable({
+                    "data": await getPlayers(db),               
+                    "paging": false,
+                    "order": [[ 2, "desc" ]],
+                    columnDefs: [
+                       { type: 'natural', targets: 2 }
+                     ],
+                     orderCellsTop: true,
+                     fixedHeader: true,
+                     responsive: true,
+                    "columns": [
+                        { "data": "firstName"},  
+                        { "data": "lastName"}, 
+                        { "data": "penaltyFinal" },   
+                        // { "data": "personalDay" }, 
+                        // { "data": "penaltyTime" },           
+                        // { "data": "penaltyReduced" },
+                    ],
+                    initComplete: function(settings, json){
+                        $('#example tbody tr').on('click', function(){
+                            let data = $('#example').DataTable().row(this).data();
+                            $('#name').html(data.firstName + " " + data.lastName);
+                            $('#pd').html(data.personalDay);
+                            $('#penalty').html(data.penaltyTime);
+                            $('#served').html(data.penaltyReduced);
+                            $('#final').html(data.penaltyFinal);
+                            buildPenaltyBoxHTML(data.penalties);
+
+                            $('#playerBox').css({
+                                'position' : 'absolute',
+                                'left' : '50%',
+                                'top' : '5%',
+                                'margin-left' : -$('#playerBox').outerWidth()/2,
+                            });
+
+                            localStorage.setItem('selectedPlayer', JSON.stringify(data));
+                            $('#playerBox').show();
+                        });
+                    }
                 });
             }
         </script>     
