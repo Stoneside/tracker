@@ -69,6 +69,7 @@
             margin-top: 10px;
             margin-left: 10px;
         }
+
 </style>
     <body>
         <div class="header" >
@@ -238,18 +239,11 @@
                             $('#final').html(data.penaltyFinal);
                             buildPenaltyBoxHTML(data.penalties);
 
-                            var w = $(window).width();
-                            var h = $(window).height();
-                            var d = $('#playerBox');
-                            var divW = $(d).width();
-                            var divH = $(d).height();
-
-
                             $('#playerBox').css({
                                 'position' : 'absolute',
-                                'left' : (w/2)-(divW/2)+"px",
-                                'top' : (h/2)-(divH/2)+"px",
-                                // 'margin-left' : -$('#playerBox').outerWidth()/2,
+                                'left' : '50%',
+                                'top' : '5%',
+                                'margin-left' : -$('#playerBox').outerWidth()/2,
                             });
 
                             localStorage.setItem('selectedPlayer', JSON.stringify(data));
@@ -262,19 +256,13 @@
                     $(this).parent().hide();
                 });
 
-                $('#addPenalty').on('click', function(){ 
-
-                            var w = $(window).width();
-                            var h = $(window).height();
-                            var d = $('#addPenaltyBox');
-                            var divW = $(d).width();
-                            var divH = $(d).height();                   
+                $('#addPenalty').on('click', function(){                    
                     $('#addPenaltyBox').css({
-                                'position' : 'absolute',
-                                'left' : (w/2)-(divW/2)+"px",
-                                'top' : (h/2)-(divH/2)+"px",
-                                // 'margin-left' : -$('#playerBox').outerWidth()/2,
-                            });
+                        'position' : 'absolute',
+                        'left' : '50%',
+                        'top' : '5%',
+                        'margin-left' : -$('#addPenaltyBox').outerWidth()/2,
+                    });
                     $('#addPenaltyBox').show();
                 });
 
