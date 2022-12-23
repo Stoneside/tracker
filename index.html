@@ -5,6 +5,7 @@
         <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css"/>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.1/jquery.min.js"></script>
         <script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
     </head> 
     <style>
         #playerBox, #addPenaltyBox, #reducePenaltyBox {
@@ -76,25 +77,25 @@
             <H1>Attendance Tracker</H1>
         </div>  
         <div class="content" >
-            <table id="example" class="display" style="width:100%">
+            <table id="example" class="display" >
                 <thead>
                     <tr>
                         <th>First</th>
-                        <th>Last</th>                        
-                        <th>PD Used</th>  
-                        <th>Penalty</th>  
-                        <th>Served</th> 
-                        <th>Final</th>          
+                        <th>Last</th> 
+                        <th>Penalty</th>                        
+                        <!-- <th>PD Used</th>   -->
+       <!--                  <th>Accrued</th>  
+                        <th>Served</th>   -->                                                   
                     </tr>
                 </thead>
                 <tfoot>
                     <tr>
                         <th>First</th>
-                        <th>Last</th>                        
-                        <th>PD Used</th>  
-                        <th>Penalty</th>  
-                        <th>Served</th> 
-                        <th>Final</th>               
+                        <th>Last</th>
+                        <th>Penalty</th>                           
+                        <!-- <th>PD Used</th>   -->
+               <!--          <th>Accrued</th>  
+                        <th>Served</th>   -->                                   
                     </tr>
             </tfoot>
             </table>
@@ -214,20 +215,20 @@
                     "data": await getPlayers(db),
                     // "scrollY": 400,
                     "paging": false,
-                    "order": [[ 5, "asc" ]],
+                    "order": [[ 2, "desc" ]],
                     columnDefs: [
                        { type: 'natural', targets: 2 }
                      ],
                      orderCellsTop: true,
                      fixedHeader: true,
+                     responsive: true,
                     "columns": [
                         { "data": "firstName"},  
-                        { "data": "lastName"},    
-                        { "data": "personalDay" }, 
-                        { "data": "penaltyTime" },           
-                        { "data": "penaltyReduced" },  
-                        { "data": "penaltyFinal" },              
-                                           
+                        { "data": "lastName"}, 
+                        { "data": "penaltyFinal" },   
+                        // { "data": "personalDay" }, 
+                        // { "data": "penaltyTime" },           
+                        // { "data": "penaltyReduced" },
                     ],
                     initComplete: function(settings, json){
                         $('#example tbody tr').on('click', function(){
